@@ -18,6 +18,7 @@ class LinkedinComponent extends Object {
 	private $requestToken = 'uas/oauth/requestToken';
 	private $accessToken = 'uas/oauth/accessToken';
 	private $authorizeToken = 'uas/oauth/authorize?oauth_token=';
+	private $authenticateToken = 'uas/oauth/authenticate?oauth_token=';
 	//
 	private $sessionRequest = 'linkedin_request_token';
 	private $sessionAccess = 'linkedin_access_token';
@@ -25,6 +26,7 @@ class LinkedinComponent extends Object {
 	private $key;
 	private $secret;
 	private $controller;
+	private $mode = 'authorize';
 
 	var $components = array('Session');
 
@@ -38,6 +40,9 @@ class LinkedinComponent extends Object {
 		$this->controller = $controller;
 		$this->key = $settings['key'];
 		$this->secret = $settings['secret'];
+		if (!empty($settings['mode'])) {
+			$this->mode = $settings['mode'];
+		}
 	}
 
 	/**
@@ -53,7 +58,8 @@ class LinkedinComponent extends Object {
 		$consumer = $this->_createConsumer();
 		$requestToken = $consumer->getRequestToken($this->authPath . $this->requestToken, Router::url($redirectUrl, true));
 		$this->Session->write($this->sessionRequest, $requestToken);
-		$this->controller->redirect($this->authPath . $this->authorizeToken . $requestToken->key);
+		$token = $this->mode == 'authenticate' ? $this->authenticateToken : $this->authorizeToken;
+		$this->controller->redirect($this->authPath . $token . $requestToken->key);
 	}
 
 	/**
