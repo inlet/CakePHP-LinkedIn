@@ -22,8 +22,8 @@ class LinkedinComponent extends Object {
 	private $sessionRequest = 'linkedin_request_token';
 	private $sessionAccess = 'linkedin_access_token';
 	//
-	private $key;
-	private $secret;
+	public $key;
+	public $secret;
 	private $controller;
 
 	var $components = array('Session');
@@ -52,7 +52,7 @@ class LinkedinComponent extends Object {
 		
 		$consumer = $this->_createConsumer();
 		$requestToken = $consumer->getRequestToken($this->authPath . $this->requestToken, Router::url($redirectUrl, true));
-		$this->Session->write($this->sessionRequest, $requestToken);
+		$this->Session->write($this->sessionRequest, serialize($requestToken));
 		$this->controller->redirect($this->authPath . $this->authorizeToken . $requestToken->key);
 	}
 
@@ -66,11 +66,10 @@ class LinkedinComponent extends Object {
 			$redirectUrl = array('controller' => strtolower($this->controller->name), 'action' => 'linkedin_authorize_callback');
 		}
 		
-		$requestToken = $this->Session->read($this->sessionRequest);
+		$requestToken = unserialize($this->Session->read($this->sessionRequest));
 		$consumer = $this->_createConsumer();
 		$accessToken = $consumer->getAccessToken($this->authPath . $this->accessToken, $requestToken);
-
-		$this->Session->write($this->sessionAccess, $accessToken);
+		$this->Session->write($this->sessionAccess, serialize($accessToken));
 		$this->controller->redirect($redirectUrl);
 	}
 
@@ -82,7 +81,7 @@ class LinkedinComponent extends Object {
 	 * @return response
 	 */
 	public function call($path, $args) {
-		$accessToken = $this->Session->read($this->sessionAccess);
+		$accessToken = unserialize($this->Session->read($this->sessionAccess));
 		if ($accessToken === null) {
 			trigger_error('Linkedin: accesToken is empty', E_USER_NOTICE);
 		}
