@@ -16,12 +16,17 @@ class LinkedinComponent extends Object {
 	private $authPath = 'https://api.linkedin.com/';
 	private $apiPath = 'http://api.linkedin.com/v1/';
 	private $requestToken = 'uas/oauth/requestToken';
+  
+    /**
+    * Permission scope parameters.  Seperate by a space ' '.
+    */
+	private $scope = 'r_basicprofile r_emailaddress r_contactinfo';
 	private $accessToken = 'uas/oauth/accessToken';
 	private $authorizeToken = 'uas/oauth/authorize?oauth_token=';
-	//
+	
 	private $sessionRequest = 'linkedin_request_token';
 	private $sessionAccess = 'linkedin_access_token';
-	//
+	
 	public $key;
 	public $secret;
 	private $controller;
@@ -49,10 +54,18 @@ class LinkedinComponent extends Object {
 		if (!isset($redirectUrl)) {
 			$redirectUrl = array('controller' => strtolower($this->controller->name), 'action' => 'linkedin_connect_callback');
 		}
+
+		$parameters = array();
+		if ($this->scope) {
+			$parameters['scope'] = $this->scope;
+		}
 		
 		$consumer = $this->_createConsumer();
-		$requestToken = $consumer->getRequestToken($this->authPath . $this->requestToken, Router::url($redirectUrl, true));
+
+		// 'POST', $parameters are added by JustAdam: Fix so that you can use member permissions.
+		$requestToken = $consumer->getRequestToken($this->authPath . $this->requestToken, Router::url($redirectUrl, true), 'POST', $paramaters);
 		$this->Session->write($this->sessionRequest, serialize($requestToken));
+
 		$this->controller->redirect($this->authPath . $this->authorizeToken . $requestToken->key);
 	}
 
